@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Camera Feed</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      background: #111;
+      color: #fff;
+      text-align: center;
+    }
+    video, canvas, img {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>📸 Камера телефону в реальному часі</h2>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <img id="captured" alt="Знімок з камери" />
+  <div>
+    <button id="snapshot">📷 Зробити знімок</button>
+    <button id="toggleAuto">▶️ Автознімки: Вимкнено</button>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captured = document.getElementById('captured');
+    const snapshotBtn = document.getElementById('snapshot');
+    const toggleAutoBtn = document.getElementById('toggleAuto');
+
+    let autoCapture = false;
+    let intervalId = null;
+
+    // Запуск камери
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error('Помилка доступу до камери', err);
+        alert("Не вдалося отримати доступ до камери 😢");
+      });
+
+    // Функція для знімку з камери
+    function takeSnapshot() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      captured.src = dataUrl;
+
+      // Відправка знімка на API
+      fetch('https://image-upload-api-vbrw.onrender.com/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: dataUrl })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('📤 Зображення успішно надіслано:', data);
+      })
+      .catch(error => {
+        console.error('❌ Помилка при надсиланні зображення:', error);
+      });
+    }
+
+    snapshotBtn.addEventListener('click', takeSnapshot);
+
+    // Перемикання автознімків
+    toggleAutoBtn.addEventListener('click', () => {
+      autoCapture = !autoCapture;
+      toggleAutoBtn.textContent = autoCapture ? '⏸️ Автознімки: Увімкнено' : '▶️ Автознімки: Вимкнено';
+
+      if (autoCapture) {
+        intervalId = setInterval(() => {
+          takeSnapshot();
+        }, 2000); // Знімок кожні 2 секунди
+      } else {
+        clearInterval(intervalId);
+      }
+    });
+  </script>
+</body>
+</html>
