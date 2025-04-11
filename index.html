@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Live Camera Feed</title>
   <style>
     body {
       font-family: sans-serif;
-      padding: 1rem;
       background: #111;
       color: #fff;
       text-align: center;
+      padding: 1rem;
     }
     video, canvas, img {
       max-width: 100%;
@@ -52,7 +52,6 @@
     let autoCapture = false;
     let intervalId = null;
 
-    // Запуск камери
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
@@ -62,7 +61,6 @@
         alert("Не вдалося отримати доступ до камери 😢");
       });
 
-    // Функція для знімку з камери
     function takeSnapshot() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -70,7 +68,7 @@
       const dataUrl = canvas.toDataURL('image/jpeg');
       captured.src = dataUrl;
 
-      // Відправка знімка на API
+      // 🔗 ВАЖЛИВО: правильна URL-адреса до твого API на Render
       fetch('https://image-upload-api-vbrw.onrender.com/upload', {
         method: 'POST',
         headers: {
@@ -89,15 +87,12 @@
 
     snapshotBtn.addEventListener('click', takeSnapshot);
 
-    // Перемикання автознімків
     toggleAutoBtn.addEventListener('click', () => {
       autoCapture = !autoCapture;
       toggleAutoBtn.textContent = autoCapture ? '⏸️ Автознімки: Увімкнено' : '▶️ Автознімки: Вимкнено';
 
       if (autoCapture) {
-        intervalId = setInterval(() => {
-          takeSnapshot();
-        }, 2000); // Знімок кожні 2 секунди
+        intervalId = setInterval(takeSnapshot, 2000);
       } else {
         clearInterval(intervalId);
       }
